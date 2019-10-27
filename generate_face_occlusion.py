@@ -185,7 +185,7 @@ def generate_json_file(split_rate=0.99):
     all_image += glob.glob(os.path.join(OUT_DIR, '*.jpg'))
     # all_image = all_image[:100]
     length = len(all_image)
-    with open(os.path.join('data', 'face_train.odgt'), 'w') as outfile:
+    with open(os.path.join('data', 'face_train_part.odgt'), 'w') as outfile:
         for image_pth in all_image[:int(length * split_rate)]:
             record = json.dumps({
                 "fpath_img": image_pth,
@@ -194,7 +194,7 @@ def generate_json_file(split_rate=0.99):
                 "height": 218
             })
             outfile.write(record + '\n')
-    with open(os.path.join('data', 'face_validate.odgt'), 'w') as outfile:
+    with open(os.path.join('data', 'face_validate_part.odgt'), 'w') as outfile:
         for image_pth in all_image[int(length * split_rate):]:
             record = json.dumps({
                 "fpath_img": image_pth,

@@ -1,7 +1,7 @@
 DATASET:
   root_dataset: "./"
-  list_train: "./data/face_train_part.odgt"
-  list_val: "./data/face_validate_part.odgt"
+  list_train: "./data/face_train.odgt"
+  list_val: "./data/face_validate.odgt"
   num_class: 2
   imgSizes: (256, 375, 450, 525, 600)
   imgMaxSize: 1000
