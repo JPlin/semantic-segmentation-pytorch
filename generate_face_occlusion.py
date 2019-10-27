@@ -195,14 +195,15 @@ def generate_json_file(split_rate=0.99):
             })
             outfile.write(record + '\n')
     with open(os.path.join('data', 'face_validate.odgt'), 'w') as outfile:
-        for image_pth in all_image[int(length * split_rate):]:
-            record = json.dumps({
-                "fpath_img": image_pth,
-                "fpath_segm": image_pth.replace('.jpg', '.png'),
-                "width": 178,
-                "height": 218
-            })
-            outfile.write(record + '\n')
+        for image_pth in all_image[int(length * split_rate) :]:
+            if os.path.exists(image_pth) and os.path.exists(image_pth.replace('.jpg', '.png')):
+                record = json.dumps({
+                    "fpath_img": image_pth,
+                    "fpath_segm": image_pth.replace('.jpg', '.png'),
+                    "width": 178,
+                    "height": 218
+                })
+                outfile.write(record + '\n')
 
 
 if __name__ == "__main__":
