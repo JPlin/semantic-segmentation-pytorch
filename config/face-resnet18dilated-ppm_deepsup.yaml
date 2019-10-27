@@ -3,7 +3,7 @@ DATASET:
   list_train: "./data/face_train.odgt"
   list_val: "./data/face_validate.odgt"
   num_class: 2
-  imgSizes: (300, 375, 450, 525, 600)
+  imgSizes: (256, 375, 450, 525, 600)
   imgMaxSize: 1000
   padding_constant: 8
   segm_downsampling_rate: 8
@@ -18,7 +18,7 @@ TRAIN:
   batch_size_per_gpu: 2
   num_epoch: 20
   start_epoch: 0
-  epoch_iters: 100
+  epoch_iters: 5000
   optim: "SGD"
   lr_encoder: 0.02
   lr_decoder: 0.02
@@ -36,7 +36,7 @@ VAL:
   checkpoint: "epoch_20.pth"
 
 TEST:
-  checkpoint: "epoch_20.pth"
+  checkpoint: "epoch_5.pth"
   result: "./"
 
 DIR: "ckpt/face-resnet18dilated-ppm_deepsup"
