@@ -1,6 +1,7 @@
 *.pyc
 data/celeba_occlu
 data/celeba_occlu_full
+data/samples
 ckpt/
 vis/
 log/
