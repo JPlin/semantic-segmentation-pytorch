@@ -1,7 +1,7 @@
 DATASET:
   root_dataset: "./"
-  list_train: "./data/face_train.odgt"
-  list_val: "./data/face_validate.odgt"
+  list_train: "./data/face_train_part.odgt"
+  list_val: "./data/face_validate_part.odgt"
   num_class: 2
   imgSizes: (256, 375, 450, 525, 600)
   imgMaxSize: 1000
@@ -36,7 +36,7 @@ VAL:
   checkpoint: "epoch_20.pth"
 
 TEST:
-  checkpoint: "epoch_5.pth"
+  checkpoint: "epoch_3.pth"
   result: "./"
 
 DIR: "ckpt/face-resnet18dilated-ppm_deepsup"
