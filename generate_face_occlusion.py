@@ -23,7 +23,9 @@ import matplotlib.pyplot as plt
 
 CELEBA_DIR = "\\\\4CV8116QRZ\\Data\\CelebA_align\\img_align_celeba"
 OCCLUSION_DIR = "\\\\msra-facednn03\\v-lingl\\faceswapNext\\data"
-OUT_DIR = os.path.join('data','celeba_occlu')
+OUT_DIR = os.path.join('data', 'celeba_occlu')
+HELEN_DIR = os.path.join('data', 'helen_occlu')
+CELEBAHQ_DIR = os.path.join('data', 'celeba_hq')
 OCCLUSION_WIDTH = 178
 OCCLUSION_HEIGHT = 218
 
@@ -163,7 +165,7 @@ class occulusion_augmentor():
         return image, all_alpha
 
 
-def aug_face_occulsion(times=2):
+def aug_face_occulsion(times=1):
     oa = occulusion_augmentor()
     for time in range(times):
         for i in tqdm.tqdm(range(len(oa.all_celeba))):
@@ -178,33 +180,49 @@ def aug_face_occulsion(times=2):
                       mask.squeeze().astype(np.uint8))
 
 
-def generate_json_file(split_rate=0.99):
+def append_odgt(txt_path, path_list, new= False):
     import json
-    data = []
-    all_image = []
-    all_image += glob.glob(os.path.join(OUT_DIR, '*.jpg'))
-    # all_image = all_image[:100]
-    length = len(all_image)
-    with open(os.path.join('data', 'face_train_part.odgt'), 'w') as outfile:
-        for image_pth in all_image[:int(length * split_rate)]:
-            record = json.dumps({
-                "fpath_img": image_pth,
-                "fpath_segm": image_pth.replace('.jpg', '.png'),
-                "width": 178,
-                "height": 218
-            })
-            outfile.write(record + '\n')
-    with open(os.path.join('data', 'face_validate_part.odgt'), 'w') as outfile:
-        for image_pth in all_image[int(length * split_rate) :]:
-            if os.path.exists(image_pth) and os.path.exists(image_pth.replace('.jpg', '.png')):
+    open_mode = 'w' if new else 'w+'
+    with open(txt_path, open_mode) as outfile:
+        for image_pth in path_list:
+            if os.path.exists(image_pth) and os.path.exists(
+                    image_pth.replace('.jpg', '.png')):
+                image = io.imread(image_pth)
+                H, W = image.shape[:2]
                 record = json.dumps({
-                    "fpath_img": image_pth,
-                    "fpath_segm": image_pth.replace('.jpg', '.png'),
-                    "width": 178,
-                    "height": 218
+                    "fpath_img":
+                    image_pth,
+                    "fpath_segm":
+                    image_pth.replace('.jpg', '.png'),
+                    "width":
+                    W,
+                    "height":
+                    H
                 })
                 outfile.write(record + '\n')
 
+
+def generate_json_file(split_rate=0.99):
+    train_txt = os.path.join('data', 'face_train_part.odgt')
+    validate_txt = os.path.join('data', 'face_validate_part.odgt')
+
+    all_celeba = glob.glob(os.path.join(OUT_DIR, '*.jpg'))
+    # all_image = all_image[:100]
+    length = 15000
+    append_odgt(train_txt, all_celeba[:int(length * 0.99)], new=True)
+    append_odgt(validate_txt, all_celeba[int(length * 0.99):], new=True)
+
+    all_celebahq = glob.glob(os.path.join(CELEBAHQ_DIR, '*.jpg'))
+    # all_image = all_image[:100]
+    length = len(all_celebahq)
+    append_odgt(train_txt, all_celebahq[:int(length * 0.99)])
+    append_odgt(validate_txt, all_celebahq[int(length * 0.99):])
+
+    all_helen = glob.glob(os.path.join(HELEN_DIR, '*.jpg'))
+    # all_image = all_image[:100]
+    length = len(all_helen)
+    append_odgt(train_txt, all_helen[:int(length * 0.99)])
+    append_odgt(validate_txt, all_helen[int(length * 0.99):])
 
 if __name__ == "__main__":
     # aug_face_occulsion()
