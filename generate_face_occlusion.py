@@ -180,9 +180,9 @@ def aug_face_occulsion(times=1):
                       mask.squeeze().astype(np.uint8))
 
 
-def append_odgt(txt_path, path_list, new= False):
+def append_odgt(txt_path, path_list, new=False):
     import json
-    open_mode = 'w' if new else 'w+'
+    open_mode = 'w+' if new else 'a+'
     with open(txt_path, open_mode) as outfile:
         for image_pth in path_list:
             if os.path.exists(image_pth) and os.path.exists(
@@ -223,6 +223,7 @@ def generate_json_file(split_rate=0.99):
     length = len(all_helen)
     append_odgt(train_txt, all_helen[:int(length * 0.99)])
     append_odgt(validate_txt, all_helen[int(length * 0.99):])
+
 
 if __name__ == "__main__":
     # aug_face_occulsion()
