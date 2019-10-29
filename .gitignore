@@ -10,4 +10,5 @@ log/
 pretrained/
 *.png
 */*.odgt
+*.odgt
 celeba_occlu.zip
