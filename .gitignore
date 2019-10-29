@@ -12,3 +12,4 @@ pretrained/
 */*.odgt
 *.odgt
 celeba_occlu.zip
+*/*.zip
