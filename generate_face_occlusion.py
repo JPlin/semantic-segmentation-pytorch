@@ -180,7 +180,7 @@ def aug_face_occulsion(times=1):
                       mask.squeeze().astype(np.uint8))
 
 
-def append_odgt(txt_path, path_list, new=False):
+def append_odgt(txt_path, path_list, new=False, H=None, W=None):
     import json
     open_mode = 'w+' if new else 'a+'
     with open(txt_path, open_mode) as outfile:
@@ -188,7 +188,8 @@ def append_odgt(txt_path, path_list, new=False):
             if os.path.exists(image_pth) and os.path.exists(
                     image_pth.replace('.jpg', '.png')):
                 image = io.imread(image_pth)
-                H, W = image.shape[:2]
+                if H is None and W is None:
+                    H, W = image.shape[:2]
                 record = json.dumps({
                     "fpath_img":
                     image_pth,
@@ -212,19 +213,36 @@ def generate_json_file(split_rate=0.99):
     append_odgt(train_txt, all_celeba[:int(length * 0.99)], new=True)
     append_odgt(validate_txt, all_celeba[int(length * 0.99):], new=True)
 
-    all_celebahq = glob.glob(os.path.join(CELEBAHQ_DIR, '*.jpg'))
-    # all_image = all_image[:100]
-    length = len(all_celebahq)
-    append_odgt(train_txt, all_celebahq[:int(length * 0.99)])
-    append_odgt(validate_txt, all_celebahq[int(length * 0.99):])
 
+def generate_json_file_celebahq(split_rate=0.99):
+    train_txt = os.path.join('data', 'face_train_celebahq.odgt')
+    validate_txt = os.path.join('data', 'face_validate_celebahq.odgt')
+    all_celebahq = glob.glob(os.path.join(CELEBAHQ_DIR, '*.jpg'))
+    length = len(all_celebahq)
+    append_odgt(train_txt,
+                all_celebahq[:int(length * 0.99)],
+                new=True,
+                H=512,
+                W=512)
+    append_odgt(validate_txt,
+                all_celebahq[int(length * 0.99):],
+                new=False,
+                H=512,
+                W=512)
+
+
+def generate_json_file_helen(split_rate=0.99):
+    train_txt = os.path.join('data', 'face_train_helen.odgt')
+    validate_txt = os.path.join('data', 'face_validate_helen.odgt')
     all_helen = glob.glob(os.path.join(HELEN_DIR, '*.jpg'))
     # all_image = all_image[:100]
     length = len(all_helen)
-    append_odgt(train_txt, all_helen[:int(length * 0.99)])
-    append_odgt(validate_txt, all_helen[int(length * 0.99):])
+    append_odgt(train_txt, all_helen[:int(length * 0.99)],new=True)
+    append_odgt(validate_txt, all_helen[int(length * 0.99):],new=True)
 
 
 if __name__ == "__main__":
     # aug_face_occulsion()
-    generate_json_file()
+    # generate_json_file()
+    generate_json_file_celebahq()
+    # generate_json_file_helen()

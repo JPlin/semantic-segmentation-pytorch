@@ -4,6 +4,8 @@ import random
 from functools import lru_cache
 from os.path import join as opj
 from pathlib import Path
+import pickle
+import cv2
 
 from tqdm import tqdm
 
@@ -17,6 +19,7 @@ from PIL import Image
 HELEN_DIR = "\\\\MSRA-FACEDNN05/haya2/Datasets/SmithCVPR2013_dataset_resized/images_no_occ"
 OCCLUSION_DIR = "\\\\msra-facednn03\\v-lingl\\faceswapNext\\data"
 OUT_DIR = "data/helen_occlu"
+PICKLE_PATH = "E:\\haya\\FaceAnomalyParsing.PyTorch\\Helen_align_matrix_dict.pk"
 OCCLUSION_WIDTH = 256
 OCCLUSION_HEIGHT = 256
 
@@ -189,5 +192,45 @@ def aug_face_occulsion(times=3):
                       mask.squeeze().astype(np.uint8))
 
 
+def _meshgrid(h, w):
+    yy, xx = np.meshgrid(np.arange(0, h, dtype=np.float32),
+                         np.arange(0, w, dtype=np.float32),
+                         indexing='ij')
+    return yy, xx
+
+
+def _warp_meshgrid(h, w, transform_matrix):
+    yy, xx = _meshgrid(h, w)
+    yy = np.reshape(yy, [-1])
+    xx = np.reshape(xx, [-1])
+    xxyy_one = np.stack([xx, yy, np.ones_like(xx)], axis=0)  # 3x(h*w)
+
+    inv_matrix = np.linalg.inv(transform_matrix)
+    xxyy_one = np.dot(inv_matrix, xxyy_one)
+    xx = np.reshape(
+        np.divide(xxyy_one[0, :], xxyy_one[2, :], dtype=np.float32), [h, w])
+    yy = np.reshape(
+        np.divide(xxyy_one[1, :], xxyy_one[2, :], dtype=np.float32), [h, w])
+    return yy, xx
+
+
+def align_helen():
+    all_helen = []
+    for suffix in ['.jpg']:
+        all_helen += glob.glob(os.path.join(HELEN_DIR, '*' + suffix))
+    with open(PICKLE_PATH, 'rb') as file:
+        matrix_dict = pickle.load(file)
+
+        for helen in all_helen:
+            image = io.imread(helen)
+            base_name = os.path.basename(helen)[:-len('.jpg')]
+            matrix = matrix_dict[base_name]
+            yy, xx = _warp_meshgrid(256, 256, matrix)
+            out_img = cv2.remap(image, xx, yy, cv2.INTER_LINEAR)
+            plt.imshow(out_img)
+            plt.show()
+
+
 if __name__ == '__main__':
-    aug_face_occulsion()
+    # aug_face_occulsion()
+    align_helen()
