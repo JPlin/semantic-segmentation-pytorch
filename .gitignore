@@ -4,6 +4,7 @@ data/celeba_occlu_full
 data/samples
 data/celeba_hq
 data/helen_occlu
+data/data.zip
 ckpt/
 vis/
 log/
@@ -12,4 +13,4 @@ pretrained/
 */*.odgt
 *.odgt
 celeba_occlu.zip
-*/*.zip
+

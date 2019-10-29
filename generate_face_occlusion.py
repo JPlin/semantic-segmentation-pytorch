@@ -244,5 +244,5 @@ def generate_json_file_helen(split_rate=0.99):
 if __name__ == "__main__":
     # aug_face_occulsion()
     # generate_json_file()
-    generate_json_file_celebahq()
-    # generate_json_file_helen()
+    # generate_json_file_celebahq()
+    generate_json_file_helen()
