@@ -1,25 +1,26 @@
 import glob
 import os
+import pickle
 import random
 from functools import lru_cache
 from os.path import join as opj
 from pathlib import Path
-import pickle
-import cv2
-
+import sys
 from tqdm import tqdm
 
 import cv2
 import imgaug.augmenters as iaa
 import matplotlib.pyplot as plt
 import numpy as np
-from skimage import img_as_ubyte, io, transform
 from PIL import Image
+from skimage import img_as_ubyte, io, transform
+sys.path.append('E:\\v-jinpl\\libcv')
+from facealignment import FA
 
 HELEN_DIR = "\\\\MSRA-FACEDNN05/haya2/Datasets/SmithCVPR2013_dataset_resized/images_no_occ"
+ALIGN_DIR = "data/helen_occlu_align"
 OCCLUSION_DIR = "\\\\msra-facednn03\\v-lingl\\faceswapNext\\data"
 OUT_DIR = "data/helen_occlu"
-PICKLE_PATH = "E:\\haya\\FaceAnomalyParsing.PyTorch\\Helen_align_matrix_dict.pk"
 OCCLUSION_WIDTH = 256
 OCCLUSION_HEIGHT = 256
 
@@ -28,7 +29,7 @@ class occulusion_augmentor():
     def __init__(self):
         self.all_helen = []
         for suffix in ['.jpg', '.png', '.JPG', '.PNG']:
-            self.all_helen += glob.glob(os.path.join(HELEN_DIR, '*' + suffix))
+            self.all_helen += glob.glob(os.path.join(ALIGN_DIR, '*' + suffix))
 
         self.all_hand = []
         for suffix in ['.jpg', '.png', '.JPG', '.PNG']:
@@ -64,14 +65,26 @@ class occulusion_augmentor():
                        })
         ])
 
+        sometimes = lambda aug: iaa.Sometimes(0.2, aug)
         self.image_augmentor = iaa.Sequential([
-            iaa.Affine(rotate=(-20, 20),
-                       scale=(0.8, 1.1),
+            iaa.Affine(rotate=(-18, 18),
+                       scale=(0.8, 1.2),
                        translate_percent={
-                           'x': (-0.1, 0.1),
-                           'y': (-0.1, 0.1)
+                           'x': (-0.08, 0.08),
+                           'y': (-0.08, 0.08)
                        }),
-            iaa.OneOf([iaa.GaussianBlur((0, 1.0))])
+            iaa.SomeOf((0, 1), [
+                iaa.Invert(0.05, per_channel=True),
+                iaa.LinearContrast((0.5, 2.0), per_channel=0.5),
+                iaa.Grayscale(alpha=(0.0, 1.0)),
+                iaa.OneOf([
+                    iaa.GaussianBlur((0, 1.0)), # blur images with a sigma between 0 and 3.0
+                    iaa.AverageBlur(k=(1, 3)), 
+                    iaa.MedianBlur(k=(1, 5)),
+                ]),
+                iaa.Sharpen(alpha=(0, 1.0), lightness=(0.75, 1.5)), # sharpen images
+                iaa.Emboss(alpha=(0, 1.0), strength=(0, 2.0)), # emboss images
+            ])
         ])
 
     @lru_cache()
@@ -89,10 +102,16 @@ class occulusion_augmentor():
 
     def aug_idx(self, idx):
         origin_image = io.imread(self.all_helen[idx])
-        origin_image = self.image_augmentor.augment_image(origin_image)
+        # origin_image = self.image_augmentor.augment_image(origin_image)
         image, mask = self.merge_hand_and_shape(origin_image / 255.,
                                                 origin_image / 255.)
-        return image, mask
+        image = (image * 255).astype(np.uint8)
+        mask = mask.astype(np.uint8)
+
+        image = np.expand_dims(image, 0)
+        mask = np.expand_dims(mask, 0)
+        image, mask = self.image_augmentor(images=image, segmentation_maps=mask)
+        return image.squeeze(0), mask.squeeze()
 
     def merge_hand_and_shape(self, image, origin_image):
         all_alpha = np.zeros((image.shape[0], image.shape[1], 1))
@@ -100,7 +119,7 @@ class occulusion_augmentor():
         u, d, l, r = self.get_csize(image.shape[0], image.shape[1])
         hands_num = random.choices(
             population=[0, 1, 2, 3],
-            weights=[0.2, 0.7, 0.05, 0.05],
+            weights=[0.1, 0.8, 0.05, 0.05],
         )[0]
 
         if hands_num >= 0:
@@ -133,7 +152,7 @@ class occulusion_augmentor():
                 all_alpha += alpha
 
         shape_num = random.choices(population=[0, 1, 2, 3],
-                                   weights=[0.4, 0.5, 0.05, 0.05])[0]
+                                   weights=[0.4, 0.3, 0.05, 0.05])[0]
         if shape_num >= 0:
             origin_image_mean = np.mean(origin_image[u:d, l:r, :], (0, 1))
             origin_image_variance = np.std(origin_image[u:d, l:r, :], (0, 1))
@@ -177,17 +196,17 @@ class occulusion_augmentor():
         return image, all_alpha
 
 
-def aug_face_occulsion(times=3):
+def aug_face_occulsion(times=6):
     oa = occulusion_augmentor()
     for time in range(times):
         for i in tqdm(range(len(oa.all_helen))):
             image, mask = oa.aug_idx(i)
-            # plt.imshow((image * 255).astype(np.uint8))
+            # plt.imshow(image)
             # plt.show()
             # plt.imshow(mask.squeeze())
             # plt.show()
             io.imsave(os.path.join(OUT_DIR, f'{i:05d}_{time}.jpg'),
-                      img_as_ubyte(image))
+                      image)
             io.imsave(os.path.join(OUT_DIR, f'{i:05d}_{time}.png'),
                       mask.squeeze().astype(np.uint8))
 
@@ -215,22 +234,22 @@ def _warp_meshgrid(h, w, transform_matrix):
 
 
 def align_helen():
+    fa = FA(gpu=True)
     all_helen = []
     for suffix in ['.jpg']:
         all_helen += glob.glob(os.path.join(HELEN_DIR, '*' + suffix))
-    with open(PICKLE_PATH, 'rb') as file:
-        matrix_dict = pickle.load(file)
 
-        for helen in all_helen:
-            image = io.imread(helen)
-            base_name = os.path.basename(helen)[:-len('.jpg')]
-            matrix = matrix_dict[base_name]
-            yy, xx = _warp_meshgrid(256, 256, matrix)
-            out_img = cv2.remap(image, xx, yy, cv2.INTER_LINEAR)
-            plt.imshow(out_img)
-            plt.show()
+    for helen in tqdm(all_helen):
+        image = io.imread(helen)
+        base_name = os.path.basename(helen)[:-len('.jpg')]
+        five_points = FA.get_five_points(fa.get_landmark(image))
+        out_img, _ = FA.extract_image_chip(image, five_points, padding=-0.07)
+
+        # plt.imshow(out_img)
+        # plt.show()
+        io.imsave(os.path.join(ALIGN_DIR, base_name + '.jpg'), out_img)
 
 
 if __name__ == '__main__':
-    # aug_face_occulsion()
-    align_helen()
+    aug_face_occulsion()
+    # align_helen()
