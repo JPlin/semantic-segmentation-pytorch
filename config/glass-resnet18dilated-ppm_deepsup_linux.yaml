@@ -36,7 +36,7 @@ VAL:
   checkpoint: "epoch_20.pth"
 
 TEST:
-  checkpoint: "epoch_3.pth"
+  checkpoint: "epoch_13.pth"
   result: "./"
 
 DIR: "ckpt/glass-resnet18dilated-ppm_deepsup"
