@@ -32,7 +32,7 @@ def extract_eyegalss(expansion=3):
         mask = io.imread(mask_pth)
         image = io.imread(opj(CELEBA_DIR, 'CelebA-HQ-img', str(idx) + '.jpg'))
         image = transform.rescale(image, 0.5)
-        mask = transform.rescale(mask, 0.5, order=0)[:, :, 0].astype(np.uint8)
+        mask = transform.rescale(mask, 1.0, order=0)[:, :, 0].astype(np.uint8)
 
         images = np.expand_dims(image, 0)
         masks = np.expand_dims(np.expand_dims(mask, 0), -1)
