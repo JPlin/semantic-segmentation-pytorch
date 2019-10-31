@@ -4,6 +4,7 @@ import torch
 from torchvision import transforms
 import numpy as np
 from PIL import Image
+import random
 
 
 def imresize(im, size, interp='bilinear'):
@@ -42,6 +43,7 @@ class BaseDataset(torch.utils.data.Dataset):
                 json.loads(x.rstrip()) for x in open(odgt, 'r')
             ]
 
+        random.shuffle(self.list_sample)
         if max_sample > 0:
             self.list_sample = self.list_sample[0:max_sample]
         if start_idx >= 0 and end_idx >= 0:  # divide file list

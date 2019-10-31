@@ -1,10 +1,5 @@
 *.pyc
-data/celeba_occlu
-data/celeba_occlu_full
-data/samples
-data/celeba_hq
-data/helen_occlu
-data/data.zip
+data/
 ckpt/
 vis/
 log/
