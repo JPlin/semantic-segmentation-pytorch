@@ -1,5 +1,6 @@
 *.pyc
 data/
+data/*.odgt
 ckpt/
 vis/
 log/
@@ -8,4 +9,3 @@ pretrained/
 */*.odgt
 *.odgt
 celeba_occlu.zip
-
