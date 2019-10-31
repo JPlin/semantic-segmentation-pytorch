@@ -1,5 +1,6 @@
 *.pyc
 data/
+data/*.odgt
 ckpt/
 vis/
 log/

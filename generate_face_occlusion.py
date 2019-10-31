@@ -237,8 +237,16 @@ def generate_json_file_helen(split_rate=0.99):
     all_helen = glob.glob(os.path.join(HELEN_DIR, '*.jpg'))
     # all_image = all_image[:100]
     length = len(all_helen)
-    append_odgt(train_txt, all_helen[:int(length * 0.99)],new=True)
-    append_odgt(validate_txt, all_helen[int(length * 0.99):],new=True)
+    append_odgt(train_txt,
+                all_helen[:int(length * 0.99)],
+                new=True,
+                H=256,
+                W=256)
+    append_odgt(validate_txt,
+                all_helen[int(length * 0.99):],
+                new=True,
+                H=256,
+                W=256)
 
 
 if __name__ == "__main__":

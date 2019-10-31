@@ -4,6 +4,7 @@ import torch
 from torchvision import transforms
 import numpy as np
 from PIL import Image
+import random
 
 
 def imresize(im, size, interp='bilinear'):
