@@ -37,6 +37,6 @@ VAL:
 
 TEST:
   checkpoint: "epoch_19.pth"
-  result: "./"
+  result: "./result"
 
 DIR: "ckpt/hand-resnet18dilated-ppm_deepsup"
